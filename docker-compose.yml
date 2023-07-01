@@ -18,13 +18,18 @@ services:
     networks:
       default:
         aliases:
-          - minio.mlops-end-to-end
-      mlops-end-to-end:
+          - minio.mlops-e2e
+      mlops-e2e:
         aliases:
-          - minio.mlops-end-to-end
+          - minio.mlops-e2e
+  orchestrator:
+      image: mlops-e2e-orchestrator
+      build:
+        context: ./src/orchestrator
+        dockerfile: ./Dockerfile
 
 volumes:
   minio_data: {}
 
 networks:
-  mlops-end-to-end:
+  mlops-e2e:
