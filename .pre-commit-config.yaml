@@ -29,7 +29,7 @@ repos:
   rev: v2.1.3
   hooks:
   - id: pycln
-    args: ["--config=pyproject.toml"]
+    args: ["--config=src/orchestrator/pyproject.toml"]
 
 - repo: https://github.com/pycqa/isort
   rev: 5.12.0

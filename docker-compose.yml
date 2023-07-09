@@ -2,34 +2,62 @@ version: '3'
 
 services:
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     ports:
       - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-    command:
-      - "server"
-      - "/data"
-      - "--console-address=:9090"
-    networks:
-      default:
-        aliases:
-          - minio.mlops-e2e
-      mlops-e2e:
-        aliases:
-          - minio.mlops-e2e
-  orchestrator:
-      image: mlops-e2e-orchestrator
-      build:
-        context: ./src/orchestrator
-        dockerfile: ./Dockerfile
+    entrypoint: ["minio", "server", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9001", "/data"]
+
+  prefect-database:
+    image: postgres:15.2-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=prefect
+    expose:
+      - 5432
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  prefect-agent:
+    image: prefecthq/prefect:2-python3.11
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "agent", "start" ]
+    environment:
+      - PREFECT_API_URL=http://prefect-api:4200/api
+
+  prefect-api:
+    image: prefecthq/prefect:2-python3.11
+    volumes:
+      - prefect:/root/.prefect
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start" ]
+    environment:
+      - PREFECT_UI_URL=http://127.0.0.0:4200/api
+      - PREFECT_API_URL=http://127.0.0.1:4200/api
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@prefect-database:5432/prefect
+    ports:
+      - "127.0.0.1:4200:4200"
+    depends_on:
+      - prefect-database
+
+  prefect-cli:
+    image: prefecthq/prefect:2-python3.11
+    entrypoint: "bash"
+    working_dir: "/root/flows"
+    volumes:
+      - "./src/orchestrator/flows:/root/flows"
+    environment:
+      - PREFECT_API_URL=http://prefect-api:4200/api
 
 volumes:
   minio_data: {}
+  prefect: {}
+  db: {}
 
 networks:
   mlops-e2e:
