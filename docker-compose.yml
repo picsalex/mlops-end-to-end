@@ -25,16 +25,16 @@ services:
       - db:/var/lib/postgresql/data
 
   prefect-agent:
-    image: prefecthq/prefect:2-python3.11
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "agent", "start" ]
+    image: prefecthq/prefect:2.11-python3.11
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "agent", "start", "--work-queue", "mlops_e2e_cv"]
     environment:
       - PREFECT_API_URL=http://prefect-api:4200/api
 
   prefect-api:
-    image: prefecthq/prefect:2-python3.11
+    image: prefecthq/prefect:2.11-python3.11
     volumes:
       - prefect:/root/.prefect
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start" ]
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start"]
     environment:
       - PREFECT_UI_URL=http://127.0.0.0:4200/api
       - PREFECT_API_URL=http://127.0.0.1:4200/api
@@ -45,19 +45,10 @@ services:
     depends_on:
       - prefect-database
 
-  prefect-cli:
-    image: prefecthq/prefect:2-python3.11
-    entrypoint: "bash"
-    working_dir: "/root/flows"
-    volumes:
-      - "./src/orchestrator/flows:/root/flows"
-    environment:
-      - PREFECT_API_URL=http://prefect-api:4200/api
-
 volumes:
   minio_data: {}
   prefect: {}
   db: {}
 
 networks:
-  mlops-e2e:
+  mlops_e2e:

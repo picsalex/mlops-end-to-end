@@ -1,14 +1,18 @@
+import os
+
 from prefect import flow, task
+
+os.environ["PREFECT_API_URL"] = "http://prefect-api:4200/api"
 
 
 @task
 def say_hello(name):
-    print(f"hello {name}")
+    print(f"hello 2 {name}")
 
 
 @task
 def say_goodbye(name):
-    print(f"goodbye {name}")
+    print(f"goodbye 2 {name}")
 
 
 @flow(name="test flow")
