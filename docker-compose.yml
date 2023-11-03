@@ -1,6 +1,14 @@
 version: '3'
 
 services:
+  ds_experiment:
+    image: jupyter/base-notebook:latest
+    container_name: ds_experiment
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./src:/home/jovyan/src"
+
   minio:
     image: minio/minio:latest
     ports:
@@ -8,42 +16,43 @@ services:
       - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+    env_file:
+      - src/.env
     entrypoint: ["minio", "server", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9001", "/data"]
+
 
   prefect-database:
     image: postgres:15.2-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=prefect
+    env_file:
+      - src/.env
     expose:
       - 5432
     volumes:
       - db:/var/lib/postgresql/data
 
-  prefect-agent:
-    image: prefecthq/prefect:2.11-python3.11
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "agent", "start", "--work-queue", "mlops_e2e_cv"]
-    environment:
-      - PREFECT_API_URL=http://prefect-api:4200/api
-
   prefect-api:
     image: prefecthq/prefect:2.11-python3.11
     volumes:
       - prefect:/root/.prefect
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start"]
+    ports:
+      - "127.0.0.1:4200:4200"
     environment:
       - PREFECT_UI_URL=http://127.0.0.0:4200/api
       - PREFECT_API_URL=http://127.0.0.1:4200/api
       - PREFECT_SERVER_API_HOST=0.0.0.0
       - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@prefect-database:5432/prefect
-    ports:
-      - "127.0.0.1:4200:4200"
     depends_on:
       - prefect-database
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start"]
+
+  prefect-agent:
+    image: prefecthq/prefect:2.11-python3.11
+    environment:
+      - PREFECT_API_URL=http://prefect-api:4200/api
+    depends_on:
+      - prefect-api
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "agent", "start", "--work-queue", "mlops_e2e_cv" ]
+
 
 volumes:
   minio_data: {}
