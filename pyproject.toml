@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "mlops-end-to-end"
+version = "0.1.0"
+description = ""
+authors = ["picsalex <132259399+picsalex@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "mlops_end_to_end"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+minio = "^7.1.17"
+python-decouple = "^3.8"
+prefect = "^2.14.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
