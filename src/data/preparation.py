@@ -1,5 +1,6 @@
 import os
 
+import ulid
 from prefect import flow, task
 
 from src.config.settings import MINIO_BUCKET, MINIO_CLIENT
@@ -28,7 +29,15 @@ def check_bucket_exists():
 
 @task
 def upload_data(data_path: str):
-    MINIO_CLIENT.fput_object(MINIO_BUCKET, data_path)
+    # Generate a ULID for the dataset
+    dataset_name = str(ulid.new())
+
+    for root, dirs, files in os.walk(data_path):
+        for filename in files:
+            local_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(local_path, start=data_path)
+            destination_path = os.path.join(dataset_name, relative_path)
+            MINIO_CLIENT.fput_object(MINIO_BUCKET, destination_path, local_path)
 
 
 @flow(name="data_preparation")

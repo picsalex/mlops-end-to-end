@@ -11,7 +11,12 @@ python = "^3.11"
 minio = "^7.1.17"
 python-decouple = "^3.8"
 prefect = "^2.14.3"
+ulid-py = "^1.1.0"
 
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
