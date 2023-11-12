@@ -1,5 +1,4 @@
 from decouple import AutoConfig
-from minio import Minio
 
 config = AutoConfig(search_path="src/config")
 
@@ -9,12 +8,8 @@ MINIO_ENDPOINT: str = f"{MINIO_HOST}:{MINIO_PORT}"
 
 MINIO_ROOT_USER: str = config("MINIO_ROOT_USER")
 MINIO_ROOT_PASSWORD: str = config("MINIO_ROOT_PASSWORD")
+MINIO_BUCKET_NAME: str = config("MINIO_BUCKET_NAME")
 
-MINIO_BUCKET: str = config("MINIO_BUCKET")
-
-MINIO_CLIENT = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ROOT_USER,
-    secret_key=MINIO_ROOT_PASSWORD,
-    secure=False,
-)
+PREFECT_API_URL: str = config("PREFECT_API_URL")
+PREFECT_SERVER_API_HOST: str = config("PREFECT_SERVER_API_HOST")
+PREFECT_API_DATABASE_CONNECTION_URL: str = config("PREFECT_API_DATABASE_CONNECTION_URL")

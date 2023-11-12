@@ -11,14 +11,6 @@ pre-commit instal
 
 Install black [here](https://black.readthedocs.io/en/stable/integrations/editors.html).
 
-## 2. How to get started?
-
-Run the following command:
-
-```
-poetry run jupyter lab
-```
-
 ## 3. URLs
 
 - Access Prefect: http://localhost:4200/

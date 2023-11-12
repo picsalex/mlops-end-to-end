@@ -1,6 +1,22 @@
 version: '3'
 
 services:
+  ds-experiment:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.jupyter
+    volumes:
+      - ./src:/home/jovyan/app/src
+    env_file:
+      - src/config/.env
+    environment:
+      - MINIO_HOST=minio
+      - PREFECT_API_URL=http://prefect-api:4200/api
+    ports:
+      - "8888:8888"
+    networks:
+      - mlops_e2e
+
   minio:
     image: minio/minio:latest
     ports:

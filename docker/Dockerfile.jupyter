@@ -1,0 +1,32 @@
+# Utiliser l'image de base Jupyter Lab officielle
+FROM jupyter/base-notebook
+
+# Copier les fichiers de configuration de Poetry si nécessaire
+COPY poetry.lock pyproject.toml /home/jovyan/app/
+
+WORKDIR /home/jovyan/app/
+
+# Basculer vers l'utilisateur root pour installer des dépendances
+# Installer gcc et les outils de build nécessaires
+USER root
+RUN apt-get update && \
+    apt-get install -y build-essential
+
+# Installer Poetry
+RUN pip install poetry
+
+# Retourner à l'utilisateur jovyan pour des raisons de sécurité
+USER jovyan
+
+# Configurer poetry: pas de création de venv et pas d'interaction
+RUN poetry config virtualenvs.create false \
+  && poetry config installer.parallel false
+
+# Installer les dépendances avec poetry
+RUN poetry install --no-interaction --no-ansi
+
+# Exposer le port par défaut de Jupyter Lab
+EXPOSE 8888
+
+# Lancer Jupyter Lab avec le token spécifié par la variable d'environnement
+CMD ["sh", "-c", "jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token=${JUPYTER_LAB_TOKEN}"]
