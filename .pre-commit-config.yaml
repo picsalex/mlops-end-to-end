@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.5.0
   hooks:
   - id: check-ast
   - id: check-case-conflict
@@ -18,7 +18,7 @@ repos:
   - id: mixed-line-ending
     args: ["--fix=lf"]
   - id: pretty-format-json
-    exclude: 'package(-lock).json'
+    exclude: 'package(-lock).json|.*\.ipynb'
     args: ["--autofix"]
   - id: trailing-whitespace
 
@@ -29,3 +29,8 @@ repos:
     - id: ruff
       args: [ --fix ]
     - id: ruff-format
+
+- repo: https://github.com/kynan/nbstripout
+  rev: 0.6.1
+  hooks:
+    - id: nbstripout
