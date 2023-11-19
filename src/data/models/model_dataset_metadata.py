@@ -5,11 +5,11 @@ from typing import List, Optional
 
 
 class DatasetSourceType(Enum):
-    HUGGING_FACE = "HuggingFace"
-    KAGGLE = "Kaggle"
-    IMPORTED = "Imported"
-    GENERATED = "Generated"
-    OTHER = "Other"
+    HUGGING_FACE = "huggingFace"
+    KAGGLE = "kaggle"
+    IMPORTED = "imported"
+    GENERATED = "generated"
+    OTHER = "other"
 
 
 class DatasetMetadata:

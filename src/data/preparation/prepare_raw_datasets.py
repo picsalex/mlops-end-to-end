@@ -1,7 +1,7 @@
 from prefect import flow, task, get_run_logger
 
 from src.config.settings import (
-    MINIO_RAW_DATASET_BUCKET_NAME,
+    MINIO_RAW_DATASETS_BUCKET_NAME,
 )
 from src.data.models.model_bucket_client import BucketClient
 from src.data.models.model_dataset import Dataset
@@ -13,7 +13,7 @@ def get_raw_dataset_bucket_name() -> str:
     """
     Retrieves the bucket name from the configuration.
     """
-    return MINIO_RAW_DATASET_BUCKET_NAME
+    return MINIO_RAW_DATASETS_BUCKET_NAME
 
 
 @task

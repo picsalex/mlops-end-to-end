@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import BinaryIO
 
 from minio import Minio, S3Error
 from minio.commonconfig import ENABLED
@@ -32,6 +33,17 @@ class BucketClient(ABC):
         bucket_name: str,
         object_name: str,
         file_path: str,
+        metadata: dict | None = None,
+    ):
+        pass
+
+    @abstractmethod
+    def upload_data(
+        self,
+        bucket_name: str,
+        object_name: str,
+        data: BinaryIO,
+        length: int,
         metadata: dict | None = None,
     ):
         pass
@@ -87,4 +99,20 @@ class MinioClient(BucketClient):
             object_name=object_name,
             file_path=file_path,
             metadata=metadata,
+        )
+
+    def upload_data(
+        self,
+        bucket_name: str,
+        object_name: str,
+        data: BinaryIO,
+        length: int,
+        metadata: dict | None = None,
+    ):
+        self.client.put_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            data=data,
+            metadata=metadata,
+            length=length,
         )

@@ -16,6 +16,7 @@ aiohttp = "^3.8.6"
 datasets = "^2.14.6"
 pillow = "^10.1.0"
 numpy = "^1.26.1"
+s3fs = "^2023.10.0"
 
 
 [tool.poetry.group.dev.dependencies]
