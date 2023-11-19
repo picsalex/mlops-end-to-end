@@ -1,5 +1,7 @@
 import os
 
+from datasets import load_dataset
+
 from src.data.models.model_bucket_client import BucketClient
 from src.data.models.model_dataset import ImportedDataset, HuggingFaceDataset, Dataset
 
@@ -45,10 +47,14 @@ class DataUploaderService:
                     dataset.get_metadata().to_dict(),
                 )
 
-    def _upload_huggingface_dataset(self, bucket_name, dataset):
+    def _upload_huggingface_dataset(self, bucket_name: str, dataset: Dataset) -> None:
         """
         Upload method for HuggingFaceDataset.
         """
-        # Implement the logic to upload data from a HuggingFaceDataset
-        # This could involve downloading the dataset from HuggingFace and then uploading it
-        pass
+        dataset_name = dataset.name
+
+        hf_dataset = load_dataset(dataset_name)
+        hf_dataset.save_to_disk(
+            f"{self.bucket_client.get_fs_url_prefix()}/{bucket_name}/{dataset_name}",
+            storage_options=self.bucket_client.get_fs_storage_option(),
+        )

@@ -60,6 +60,7 @@ class ImportedDataset(Dataset):
 class HuggingFaceDataset(Dataset):
     def __init__(self, path: str, api_token: str = None):
         super().__init__(path)
+        self.name = path
         self.api_token = api_token
 
     def validate_dataset_path(self) -> None:
