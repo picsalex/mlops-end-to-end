@@ -26,7 +26,7 @@ services:
       - minio_data:/data
     env_file:
       - src/config/.env
-    entrypoint: ["minio", "server", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9001", "/data"]
+    entrypoint: [ "minio", "server", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9001", "/data" ]
     networks:
       - mlops_e2e
 
@@ -52,7 +52,7 @@ services:
       - src/config/.env
     depends_on:
       - prefect-database
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start"]
+    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start" ]
     networks:
       - mlops_e2e
 
@@ -68,9 +68,9 @@ services:
 
 
 volumes:
-  minio_data: {}
-  prefect_data: {}
-  postgres_data: {}
+  minio_data: { }
+  prefect_data: { }
+  postgres_data: { }
 
 networks:
   mlops_e2e:

@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import BinaryIO
+from typing import BinaryIO, Generator, Any
 
+import urllib3
 from minio import Minio, S3Error
-from minio.commonconfig import ENABLED
+from minio.commonconfig import ENABLED, CopySource
+from minio.datatypes import Object
+from minio.helpers import ObjectWriteResult
 from minio.versioningconfig import VersioningConfig
 
 
@@ -46,6 +49,24 @@ class BucketClient(ABC):
         length: int,
         metadata: dict | None = None,
     ):
+        pass
+
+    @abstractmethod
+    def list_objects(self, bucket_name: str, prefix: str = None):
+        pass
+
+    @abstractmethod
+    def get_object(self, bucket_name: str, object_name: str):
+        pass
+
+    @abstractmethod
+    def copy_object(
+        self,
+        source_bucket_name: str,
+        source_object_name: str,
+        destination_bucket_name: str,
+        destination_object_name: str,
+    ) -> ObjectWriteResult:
         pass
 
 
@@ -116,3 +137,37 @@ class MinioClient(BucketClient):
             metadata=metadata,
             length=length,
         )
+
+    def list_objects(
+        self, bucket_name: str, prefix: str = None
+    ) -> Generator[Object, Any, None]:
+        try:
+            return self.client.list_objects(bucket_name=bucket_name, prefix=prefix)
+        except S3Error as e:
+            raise e
+
+    def get_object(
+        self, bucket_name: str, object_name: str
+    ) -> urllib3.response.HTTPResponse:
+        try:
+            return self.client.get_object(
+                bucket_name=bucket_name, object_name=object_name
+            )
+        except S3Error as e:
+            raise e
+
+    def copy_object(
+        self,
+        source_bucket_name: str,
+        source_object_name: str,
+        destination_bucket_name: str,
+        destination_object_name: str,
+    ) -> ObjectWriteResult:
+        try:
+            return self.client.copy_object(
+                bucket_name=destination_bucket_name,
+                object_name=destination_object_name,
+                source=CopySource(source_bucket_name, source_object_name),
+            )
+        except S3Error as e:
+            raise e

@@ -1,118 +1,74 @@
-import os
-from abc import ABC, abstractmethod
-from datetime import datetime
+import random
+from typing import Optional
 
-import requests
 import ulid
 
-from src.data.models.model_dataset_metadata import DatasetMetadata, DatasetSourceType
 
+class Dataset:
+    def __init__(
+        self,
+        bucket_name,
+        seed: str = "e2e",
+        annotations_path: str = "annotations",
+        images_path: str = "images",
+        distribution_weights: Optional[list[float]] = None,
+    ):
+        if distribution_weights is None:
+            distribution_weights = [0.6, 0.2, 0.2]
 
-class Dataset(ABC):
-    def __init__(self, path: str):
-        self.path = path
-        self.name = Dataset.get_dataset_name()
+        self.uuid = self.get_data_source_uuid()
+        self.bucket_name = bucket_name
+        self.annotations_path = annotations_path
+        self.images_path = images_path
+        self.distribution_weights = distribution_weights
+        self.random_instance = random.Random(seed)
 
-    @abstractmethod
-    def validate_dataset_path(self) -> None:
-        pass
+    def format_bucket_image_path(self, image_file_path: str, split_name: str) -> str:
+        """
+        Formats the bucket path for an image file based on the dataset's UUID and folder distribution.
 
-    @abstractmethod
-    def get_metadata(self) -> DatasetMetadata:
-        pass
+        Args:
+            image_file_path (str): The original path of the image file.
+            split_name (str): The name of the split (train, test, or validation) the file will go into.
+
+        Returns:
+            str: A formatted bucket path for the image file.
+        """
+        image_filename = image_file_path.split("/")[-1]
+        return f"{self.uuid}/{split_name}/{self.images_path}/{image_filename}"
+
+    def format_bucket_annotation_path(
+        self, annotation_file_path: str, split_name: str
+    ) -> str:
+        """
+        Formats the bucket path for an annotation file based on the dataset's UUID and folder distribution.
+
+        Args:
+            annotation_file_path (str): The original path of the annotation file.
+            split_name (str): The name of the split (train, test, or validation) the file will go into.
+
+        Returns:
+            str: A formatted bucket path for the annotation file.
+        """
+        annotation_filename = annotation_file_path.split("/")[-1]
+        return f"{self.uuid}/{split_name}/{self.annotations_path}/{annotation_filename}"
 
     @staticmethod
-    def get_dataset_name() -> str:
+    def get_data_source_uuid() -> str:
+        """
+        Generates a new ULID (Universally Unique Lexicographically Sortable Identifier) for the dataset.
+
+        Returns:
+            str: A ULID string.
+        """
         return str(ulid.new())
 
-
-class ImportedDataset(Dataset):
-    def validate_dataset_path(self) -> None:
+    def get_next_split(self) -> str:
         """
-        Validate an imported dataset's path.
-        Checks if the provided path exists and is a directory. Raises an exception if not.
-
-        Raises:
-            FileNotFoundError: If the dataset path does not exist.
-            NotADirectoryError: If the dataset path exists but is not a directory.
-        """
-        if not os.path.exists(self.path):
-            raise FileNotFoundError(f"The dataset path '{self.path}' does not exist.")
-
-        if not os.path.isdir(self.path):
-            raise NotADirectoryError(f"The path '{self.path}' is not a directory.")
-
-    def get_metadata(self) -> DatasetMetadata:
-        """
-        Retrieve metadata information for the HuggingFace dataset.
+        Randomly selects a folder ("train", "test", or "validation") based on the specified distribution weights.
 
         Returns:
-            DatasetMetadata: An object containing metadata for the dataset.
+            str: The name of the selected folder.
         """
-        return DatasetMetadata(
-            name=self.get_dataset_name(),
-            source=DatasetSourceType.IMPORTED,
-            creation_date=datetime.now(),
-            last_modified_date=datetime.now(),
-        )
-
-
-class HuggingFaceDataset(Dataset):
-    def __init__(self, path: str, api_token: str = None):
-        super().__init__(path)
-        self.name = path
-        self.api_token = api_token
-
-    def validate_dataset_path(self) -> None:
-        """
-        Check if the dataset identifier exists in HuggingFace's dataset registry.
-        Raises specific exceptions based on the dataset's availability and access requirements.
-
-        Raises:
-            ValueError: If the dataset is not valid or not found in HuggingFace's registry.
-            PermissionError: If the dataset is gated and requires a private API token.
-            FileNotFoundError: If there is an issue with the request or the dataset is not found.
-        """
-        headers = {}
-        if self.api_token:
-            headers["Authorization"] = f"Bearer {self.api_token}"
-
-        api_url = f"https://datasets-server.huggingface.co/is-valid?dataset={self.path}"
-
-        try:
-            response = requests.get(api_url, headers=headers)
-
-            if response.status_code == 401:
-                raise PermissionError(
-                    "The dataset is gated and requires a private API token for access."
-                )
-            elif response.status_code == 404:
-                raise FileNotFoundError(
-                    "There is an issue with the request, or the dataset is not found on HuggingFace."
-                )
-            elif not response.ok:
-                raise ValueError(
-                    f"An error occurred with the request. Status code: {response.status_code}"
-                )
-
-            data = response.json()
-            if not (data.get("viewer", False) or data.get("preview", False)):
-                raise ValueError(
-                    f"The dataset '{self.path}' is not valid or not available on HuggingFace."
-                )
-        except requests.RequestException as e:
-            raise ConnectionError(f"Failed to connect to HuggingFace server: {e}")
-
-    def get_metadata(self) -> DatasetMetadata:
-        """
-        Retrieve metadata information for the HuggingFace dataset.
-
-        Returns:
-            DatasetMetadata: An object containing metadata for the dataset.
-        """
-        return DatasetMetadata(
-            name=self.path,
-            source=DatasetSourceType.HUGGING_FACE,
-            creation_date=datetime.now(),
-            last_modified_date=datetime.now(),
-        )
+        folders = ["train", "test", "validation"]
+        return self.random_instance.choices(folders, self.distribution_weights)[0]
