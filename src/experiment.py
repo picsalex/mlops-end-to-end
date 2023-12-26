@@ -25,4 +25,6 @@ data_source_list = [HuggingFaceDataSource("kili-technology/plastic_in_river", ""
 # prepare_data_sources_flow(bucket_client=bucket_client, data_source_list=data_source_list)
 
 # 5
-prepare_dataset_flow(bucket_client=bucket_client, data_source_list=data_source_list)
+dataset = prepare_dataset_flow(
+    bucket_client=bucket_client, data_source_list=data_source_list
+)
