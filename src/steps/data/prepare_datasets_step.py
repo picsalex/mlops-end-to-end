@@ -5,16 +5,26 @@ from typing import Any, Optional
 import tqdm
 import urllib3
 from PIL import Image
-from prefect import flow, task, get_run_logger
+from pydantic import BaseModel
+from zenml import step
+from zenml.logger import get_logger
 
 from src.config.settings import (
     MINIO_DATA_SOURCES_BUCKET_NAME,
     MINIO_DATASETS_BUCKET_NAME,
 )
-from src.data.models.model_bucket_client import BucketClient
-from src.data.models.model_data_source import DataSource
-from src.data.models.model_dataset import Dataset
-from src.data.preparation.prepare_bucket import validate_bucket_connection
+from src.models.model_bucket_client import BucketClient
+from src.models.model_data_source import DataSource
+from src.models.model_dataset import Dataset
+from src.steps.data.prepare_bucket_step import validate_bucket_connection
+
+
+class DatasetFlowConfig(BaseModel):
+    bucket_client: BucketClient
+    data_source_list: list[DataSource]
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 def get_data_sources_bucket_name() -> str:
@@ -68,7 +78,7 @@ def is_image_file_valid(
 def get_json_data_if_valid(
     annotation_file_bucket_response: urllib3.response.HTTPResponse
 ) -> Optional[dict]:
-    logger = get_run_logger()
+    logger = get_logger(__name__)
 
     try:
         json_data = json.loads(annotation_file_bucket_response.data.decode("utf-8"))
@@ -104,14 +114,14 @@ def copy_object(
     )
 
 
-@task
+@step(name="Prepare the dataset inside the bucket")
 def prepare_dataset(
     bucket_client: BucketClient,
     source_bucket_name: str,
     dataset: Dataset,
     data_source: DataSource,
 ):
-    logger = get_run_logger()
+    logger = get_logger(__name__)
     data_source_bucket_annotation_path = f"{data_source.name}/annotations/"
 
     for annotation_bucket_object in tqdm.tqdm(
@@ -172,10 +182,10 @@ def prepare_dataset(
             image_file_bucket_response.release_conn()
 
 
-@flow(name="Prepare dataset", validate_parameters=False)
-def prepare_dataset_flow(
-    bucket_client: BucketClient, data_source_list: list[DataSource]
-) -> Dataset:
+@step(name="Create dataset")
+def create_dataset(config: DatasetFlowConfig) -> Dataset:
+    bucket_client = config.bucket_client
+    data_source_list = config.data_source_list
     dataset = Dataset(bucket_name=get_dataset_bucket_name())
 
     validate_bucket_connection(bucket_client=bucket_client)

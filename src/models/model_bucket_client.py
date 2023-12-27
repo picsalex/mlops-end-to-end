@@ -148,7 +148,7 @@ class MinioClient(BucketClient):
 
     def get_object(
         self, bucket_name: str, object_name: str
-    ) -> urllib3.response.HTTPResponse:
+    ) -> urllib3.response.BaseHTTPResponse:
         try:
             return self.client.get_object(
                 bucket_name=bucket_name, object_name=object_name

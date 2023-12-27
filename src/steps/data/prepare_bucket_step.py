@@ -1,6 +1,7 @@
 from typing import List
 
-from prefect import flow, task, get_run_logger
+from zenml import step
+from zenml.logger import get_logger
 
 from src.config.settings import (
     MINIO_PENDING_ANNOTATIONS_BUCKET_NAME,
@@ -8,7 +9,7 @@ from src.config.settings import (
     MINIO_DATA_SOURCES_BUCKET_NAME,
     MINIO_DATASETS_BUCKET_NAME,
 )
-from src.data.models.model_bucket_client import BucketClient
+from src.models.model_bucket_client import BucketClient
 
 
 def get_bucket_names() -> List[str]:
@@ -26,7 +27,7 @@ def get_bucket_names() -> List[str]:
     ]
 
 
-@task
+@step(name="Validate connection to bucket client")
 def validate_bucket_connection(bucket_client: BucketClient) -> None:
     """
     Validate the connection to the bucket_client.
@@ -37,7 +38,7 @@ def validate_bucket_connection(bucket_client: BucketClient) -> None:
     Raises:
         ConnectionError: If the connection to the bucket_client fails.
     """
-    logger = get_run_logger()
+    logger = get_logger(__name__)
 
     try:
         bucket_client.check_connection()
@@ -49,7 +50,7 @@ def validate_bucket_connection(bucket_client: BucketClient) -> None:
         raise
 
 
-@task
+@step(name="Setup bucket")
 def setup_bucket(
     bucket_client: BucketClient, bucket_name: str, enable_versioning: bool
 ) -> None:
@@ -61,7 +62,7 @@ def setup_bucket(
         bucket_name (str): The name of the bucket to create or configure.
         enable_versioning (bool): Flag to enable versioning on the bucket.
     """
-    logger = get_run_logger()
+    logger = get_logger(__name__)
 
     if not bucket_client.bucket_exists(bucket_name):
         bucket_client.make_bucket(bucket_name, enable_versioning)
@@ -72,12 +73,12 @@ def setup_bucket(
         logger.warning(f"The bucket {bucket_name} already exists. Skipping.")
 
 
-@flow(name="Prepare Buckets", validate_parameters=False)
-def prepare_buckets_flow(
+@step(name="Prepare Buckets")
+def prepare_buckets(
     bucket_client: BucketClient, bucket_names: list[str], enable_versioning: bool
 ) -> None:
     """
-    Prefect flow to prepare the buckets for data storage and management.
+    ZenML pipeline to prepare the buckets for data storage and management.
     This flow creates and configures buckets as needed and enables versioning.
     """
     validate_bucket_connection(bucket_client)

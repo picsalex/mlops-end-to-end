@@ -5,7 +5,7 @@ from datetime import datetime
 import requests
 import ulid
 
-from src.data.models.model_datasource_metadata import DataSourceMetadata, DataSourceType
+from src.models.model_datasource_metadata import DataSourceMetadata, DataSourceType
 
 
 class DataSource(ABC):

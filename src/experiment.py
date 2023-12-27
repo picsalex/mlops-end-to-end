@@ -1,7 +1,7 @@
 from src.config.settings import MINIO_ENDPOINT, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
-from src.data.models.model_bucket_client import MinioClient
-from src.data.models.model_data_source import HuggingFaceDataSource
-from src.data.preparation.prepare_datasets import prepare_dataset_flow
+from src.models import HuggingFaceDataSource
+from src.models import MinioClient
+from src.steps.data.prepare_datasets_step import create_dataset, DatasetFlowConfig
 
 # 1
 bucket_client = MinioClient(
@@ -25,6 +25,6 @@ data_source_list = [HuggingFaceDataSource("kili-technology/plastic_in_river", ""
 # prepare_data_sources_flow(bucket_client=bucket_client, data_source_list=data_source_list)
 
 # 5
-dataset = prepare_dataset_flow(
-    bucket_client=bucket_client, data_source_list=data_source_list
+dataset = create_dataset(
+    DatasetFlowConfig(bucket_client=bucket_client, data_source_list=data_source_list)
 )

@@ -31,46 +31,35 @@ services:
       - mlops_e2e
 
 
-  prefect-database:
-    image: postgres:15.2-alpine
+  zenml-database:
+    image: mysql:8.2
     env_file:
       - src/config/.env
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+
     networks:
       - mlops_e2e
 
-  prefect-api:
-    image: prefecthq/prefect:2.11-python3.11
-    volumes:
-      - prefect_data:/root/.prefect
+  zenml-server:
+    image: zenmldocker/zenml-server:latest
     ports:
-      - "127.0.0.1:4200:4200"
+      - "8080:8080"
     env_file:
       - src/config/.env
     depends_on:
-      - prefect-database
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "server", "start" ]
-    networks:
-      - mlops_e2e
-
-  prefect-agent:
-    image: prefecthq/prefect:2.11-python3.11
-    environment:
-      - PREFECT_API_URL=http://prefect-api:4200/api
-    depends_on:
-      - prefect-api
-    entrypoint: [ "/opt/prefect/entrypoint.sh", "prefect", "agent", "start", "--work-queue", "mlops_e2e_cv" ]
+      - zenml-database
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - mlops_e2e
 
 
 volumes:
   minio_data: { }
-  prefect_data: { }
-  postgres_data: { }
+  mysql_data: { }
 
 networks:
   mlops_e2e:

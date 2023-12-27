@@ -4,20 +4,19 @@ version = "0.1.0"
 description = ""
 authors = ["picsalex <132259399+picsalex@users.noreply.github.com>"]
 readme = "README.md"
-packages = [{include = "mlops_end_to_end"}]
+packages = [{ include = "mlops_end_to_end" }]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.11,<3.12"
 minio = "^7.1.17"
 python-decouple = "^3.8"
-prefect = "^2.14.3"
 ulid-py = "^1.1.0"
 aiohttp = "^3.8.6"
 datasets = "^2.14.6"
 pillow = "^10.1.0"
 numpy = "^1.26.1"
 s3fs = "^2023.10.0"
-great-expectations = "^0.18.3"
+zenml = "^0.53.1"
 
 
 [tool.poetry.group.dev.dependencies]

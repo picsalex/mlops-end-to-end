@@ -1,12 +1,13 @@
-from prefect import flow, task, get_run_logger
+from zenml import step
+from zenml.logger import get_logger
 
 from src.config.settings import (
     MINIO_DATA_SOURCES_BUCKET_NAME,
 )
-from src.data.models.model_bucket_client import BucketClient
-from src.data.models.model_data_source import DataSource
-from src.data.preparation.prepare_bucket import validate_bucket_connection
-from src.data.services.service_data_uploader import DataUploaderService
+from src.models.model_bucket_client import BucketClient
+from src.models.model_data_source import DataSource
+from src.services.service_data_uploader import DataUploaderService
+from src.steps.data.prepare_bucket_step import validate_bucket_connection
 
 
 def get_data_sources_bucket_name() -> str:
@@ -16,12 +17,12 @@ def get_data_sources_bucket_name() -> str:
     return MINIO_DATA_SOURCES_BUCKET_NAME
 
 
-@task
+@step(name="Validate data source path")
 def verify_data_source_path(data_source: DataSource) -> None:
     """
     Checks if the provided data source's path is valid.
     """
-    logger = get_run_logger()
+    logger = get_logger(__name__)
 
     try:
         data_source.verify_data_source_path()
@@ -30,7 +31,7 @@ def verify_data_source_path(data_source: DataSource) -> None:
         raise
 
 
-@task
+@step(name="Upload data source to bucket")
 def upload_data(
     data_uploader_service: DataUploaderService,
     bucket_name: str,
@@ -39,7 +40,7 @@ def upload_data(
     """
     Uploads data from the provided path to the bucket.
     """
-    logger = get_run_logger()
+    logger = get_logger(__name__)
 
     try:
         data_uploader_service.upload_data(
@@ -52,8 +53,8 @@ def upload_data(
         raise
 
 
-@flow(name="Prepare data sources", validate_parameters=False)
-def prepare_data_sources_flow(
+@step(name="Prepare data sources")
+def prepare_data_sources(
     bucket_client: BucketClient, data_source_list: list[DataSource]
 ) -> None:
     """

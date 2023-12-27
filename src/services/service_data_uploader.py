@@ -8,8 +8,8 @@ import PIL.Image
 import tqdm
 from datasets import load_dataset
 
-from src.data.models.model_bucket_client import BucketClient
-from src.data.models.model_data_source import (
+from src.models.model_bucket_client import BucketClient
+from src.models.model_data_source import (
     LocalDataSource,
     HuggingFaceDataSource,
     DataSource,
