@@ -16,3 +16,5 @@ Install black [here](https://black.readthedocs.io/en/stable/integrations/editors
 - Access Prefect: http://localhost:4200/
 - Access Prefect Database: http://localhost:5432
 - Access Minio: http://localhost:9000
+
+# https://github.dev/zenml-io/zenml-gitflow/blob/main/pipelines/training.py

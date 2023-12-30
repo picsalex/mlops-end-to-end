@@ -5,9 +5,9 @@ from src.config.settings import (
     MINIO_DATA_SOURCES_BUCKET_NAME,
 )
 from src.models.model_bucket_client import BucketClient
-from src.models.model_data_source import DataSource
+from src.models.model_data_source import DataSource, DataSourceList
 from src.services.service_data_uploader import DataUploaderService
-from src.steps.data.prepare_bucket_step import validate_bucket_connection
+from src.steps.data.datalake_initializers import validate_bucket_connection
 
 
 def get_data_sources_bucket_name() -> str:
@@ -54,8 +54,8 @@ def upload_data(
 
 
 @step(name="Prepare data sources")
-def prepare_data_sources(
-    bucket_client: BucketClient, data_source_list: list[DataSource]
+def data_sources_uploader(
+    bucket_client: BucketClient, data_source_list: DataSourceList
 ) -> None:
     """
     Flow for preparing data sources, which includes validating the data path, checking the bucket connection,
@@ -64,7 +64,7 @@ def prepare_data_sources(
     data_uploader_service = DataUploaderService(bucket_client)
     validate_bucket_connection(bucket_client=bucket_client)
 
-    for data_source in data_source_list:
+    for data_source in data_source_list.data_sources:
         verify_data_source_path(data_source=data_source)
 
         upload_data(

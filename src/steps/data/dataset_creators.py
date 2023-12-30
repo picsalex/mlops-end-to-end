@@ -5,7 +5,6 @@ from typing import Any, Optional
 import tqdm
 import urllib3
 from PIL import Image
-from pydantic import BaseModel
 from zenml import step
 from zenml.logger import get_logger
 
@@ -16,15 +15,7 @@ from src.config.settings import (
 from src.models.model_bucket_client import BucketClient
 from src.models.model_data_source import DataSource
 from src.models.model_dataset import Dataset
-from src.steps.data.prepare_bucket_step import validate_bucket_connection
-
-
-class DatasetFlowConfig(BaseModel):
-    bucket_client: BucketClient
-    data_source_list: list[DataSource]
-
-    class Config:
-        arbitrary_types_allowed = True
+from src.steps.data.datalake_initializers import validate_bucket_connection
 
 
 def get_data_sources_bucket_name() -> str:
@@ -183,9 +174,9 @@ def prepare_dataset(
 
 
 @step(name="Create dataset")
-def create_dataset(config: DatasetFlowConfig) -> Dataset:
-    bucket_client = config.bucket_client
-    data_source_list = config.data_source_list
+def dataset_creator(
+    bucket_client: BucketClient, data_source_list: list[DataSource]
+) -> Dataset:
     dataset = Dataset(bucket_name=get_dataset_bucket_name())
 
     validate_bucket_connection(bucket_client=bucket_client)

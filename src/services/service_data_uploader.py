@@ -32,7 +32,7 @@ class DataUploaderService:
         if isinstance(data_source, LocalDataSource):
             self._upload_imported_data_source(bucket_name, data_source)
         elif isinstance(data_source, HuggingFaceDataSource):
-            self._upload_huggingface_dataset(bucket_name, data_source)
+            self._upload_huggingface_data_source(bucket_name, data_source)
         else:
             raise TypeError(
                 f"Unsupported data source's type: {type(data_source).__name__}"
@@ -62,35 +62,37 @@ class DataUploaderService:
                     data_source.get_metadata().to_dict(),
                 )
 
-    def _upload_huggingface_dataset(
-        self, bucket_name: str, dataset: HuggingFaceDataSource
+    def _upload_huggingface_data_source(
+        self, bucket_name: str, data_source: HuggingFaceDataSource
     ) -> None:
         """
         Uploads a HuggingFace dataset to a specified bucket.
 
         Args:
             bucket_name (str): Name of the bucket where the dataset will be uploaded.
-            dataset (HuggingFaceDataSource): HuggingFaceDataset object to be uploaded.
+            data_source (HuggingFaceDataSource): HuggingFaceDataSource object to be uploaded.
         """
-        hf_dataset = load_dataset(dataset.name)
+        hf_data_source = load_dataset(data_source.dataset_name)
 
         max_workers = 10
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
 
-            total_items = sum(len(hf_dataset[split]) for split in hf_dataset.keys())
+            total_items = sum(
+                len(hf_data_source[split]) for split in hf_data_source.keys()
+            )
             with tqdm.tqdm(
                 total=total_items, desc="Scheduling uploads"
             ) as schedule_bar:
-                for split in hf_dataset.keys():
-                    for item in hf_dataset[split]:
+                for split in hf_data_source.keys():
+                    for item in hf_data_source[split]:
                         future = executor.submit(
                             self._upload_task,
                             bucket_name,
-                            dataset.name,
+                            data_source.name,
                             item,
-                            dataset.get_metadata().to_dict(),
+                            data_source.get_metadata().to_dict(),
                         )
                         futures.append(future)
 

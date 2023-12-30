@@ -1,6 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import List
 
 import requests
 import ulid
@@ -16,11 +17,15 @@ class DataSource(ABC):
         annotation_folder_path: str | None = None,
     ):
         self.uuid = DataSource.get_data_source_uuid()
-        self.name = "name-here"
 
         self.root_folder_path = root_folder_path
         self.object_folder_path = object_folder_path
         self.annotation_folder_path = annotation_folder_path
+
+        self.name = self.get_data_source_name()
+
+    def get_data_source_name(self) -> str:
+        return self.root_folder_path.split("/")[-1]
 
     @abstractmethod
     def verify_data_source_path(self) -> None:
@@ -74,17 +79,15 @@ class LocalDataSource(DataSource):
 class HuggingFaceDataSource(DataSource):
     def __init__(
         self,
-        root_folder_path: str,
-        object_folder_path: str,
-        annotation_folder_path: str,
+        dataset_name: str,
         api_token: str = None,
     ):
         super().__init__(
-            root_folder_path=root_folder_path,
-            object_folder_path=object_folder_path,
-            annotation_folder_path=annotation_folder_path,
+            root_folder_path=dataset_name,
+            object_folder_path=None,
+            annotation_folder_path=None,
         )
-        self.name = root_folder_path
+        self.dataset_name = dataset_name
         self.api_token = api_token
 
     def verify_data_source_path(self) -> None:
@@ -141,3 +144,8 @@ class HuggingFaceDataSource(DataSource):
             creation_date=datetime.now(),
             last_modified_date=datetime.now(),
         )
+
+
+class DataSourceList:
+    def __init__(self, data_sources: List[DataSource]):
+        self.data_sources = data_sources

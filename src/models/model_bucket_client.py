@@ -11,14 +11,6 @@ from minio.versioningconfig import VersioningConfig
 
 class BucketClient(ABC):
     @abstractmethod
-    def get_fs_url_prefix(self) -> str:
-        pass
-
-    @abstractmethod
-    def get_fs_storage_option(self) -> dict:
-        pass
-
-    @abstractmethod
     def check_connection(self) -> None:
         pass
 
@@ -74,21 +66,14 @@ class MinioClient(BucketClient):
     def __init__(
         self, endpoint: str, access_key: str, secret_key: str, secure: bool = False
     ):
+        self.secure = secure
+
         self.client = Minio(
-            endpoint, access_key=access_key, secret_key=secret_key, secure=secure
+            endpoint=endpoint,
+            access_key=access_key,
+            secret_key=secret_key,
+            secure=self.secure,
         )
-
-        self._storage_options = {
-            "endpoint_url": f"http://{endpoint}",
-            "key": access_key,
-            "secret": secret_key,
-        }
-
-    def get_fs_url_prefix(self) -> str:
-        return "s3://"
-
-    def get_fs_storage_option(self) -> dict:
-        return self._storage_options
 
     def check_connection(self) -> None:
         try:

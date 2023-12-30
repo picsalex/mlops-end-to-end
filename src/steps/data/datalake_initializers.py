@@ -4,27 +4,18 @@ from zenml import step
 from zenml.logger import get_logger
 
 from src.config.settings import (
+    MINIO_ENDPOINT,
+    MINIO_ROOT_USER,
+    MINIO_ROOT_PASSWORD,
     MINIO_PENDING_ANNOTATIONS_BUCKET_NAME,
     MINIO_PENDING_REVIEWS_BUCKET_NAME,
     MINIO_DATA_SOURCES_BUCKET_NAME,
     MINIO_DATASETS_BUCKET_NAME,
 )
-from src.models.model_bucket_client import BucketClient
-
-
-def get_bucket_names() -> List[str]:
-    """
-    Retrieve a list of bucket names to be created the bucket client.
-
-    Returns:
-        List[str]: A list of bucket names for creation and management.
-    """
-    return [
-        MINIO_PENDING_ANNOTATIONS_BUCKET_NAME,
-        MINIO_PENDING_REVIEWS_BUCKET_NAME,
-        MINIO_DATA_SOURCES_BUCKET_NAME,
-        MINIO_DATASETS_BUCKET_NAME,
-    ]
+from src.materializers.materializer_bucket_client import BucketClientMaterializer
+from src.materializers.materializer_data_source import DataSourceMaterializer
+from src.models.model_bucket_client import BucketClient, MinioClient
+from src.models.model_data_source import HuggingFaceDataSource, DataSourceList
 
 
 @step(name="Validate connection to bucket client")
@@ -73,9 +64,48 @@ def setup_bucket(
         logger.warning(f"The bucket {bucket_name} already exists. Skipping.")
 
 
-@step(name="Prepare Buckets")
-def prepare_buckets(
-    bucket_client: BucketClient, bucket_names: list[str], enable_versioning: bool
+@step(name="Initialize a MinIO client", output_materializers=BucketClientMaterializer)
+def minio_client_initializer() -> MinioClient:
+    return MinioClient(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ROOT_USER,
+        secret_key=MINIO_ROOT_PASSWORD,
+        secure=False,
+    )
+
+
+@step(name="Retrieve bucket names")
+def bucket_name_list_initializer() -> List[str]:
+    """
+    Retrieve a list of bucket names to be created the bucket client.
+
+    Returns:
+        List[str]: A list of bucket names for creation and management.
+    """
+    return [
+        MINIO_PENDING_ANNOTATIONS_BUCKET_NAME,
+        MINIO_PENDING_REVIEWS_BUCKET_NAME,
+        MINIO_DATA_SOURCES_BUCKET_NAME,
+        MINIO_DATASETS_BUCKET_NAME,
+    ]
+
+
+@step(name="Retrieve the data sources", output_materializers=DataSourceMaterializer)
+def data_source_list_initializer() -> DataSourceList:
+    """
+    Retrieve a list of DataSource. Those DataSource will then be imported into the Datalake.
+
+    Returns:
+        DataSourceList: A list of DataSource.
+    """
+    return DataSourceList([HuggingFaceDataSource("kili-technology/plastic_in_river")])
+
+
+@step(name="Initialize the datalake")
+def datalake_initializer(
+    bucket_client: BucketClient,
+    bucket_name_list: list[str],
+    enable_versioning: bool = True,
 ) -> None:
     """
     ZenML pipeline to prepare the buckets for data storage and management.
@@ -83,7 +113,7 @@ def prepare_buckets(
     """
     validate_bucket_connection(bucket_client)
 
-    for bucket_name in bucket_names:
+    for bucket_name in bucket_name_list:
         setup_bucket(
             bucket_client=bucket_client,
             bucket_name=bucket_name,
