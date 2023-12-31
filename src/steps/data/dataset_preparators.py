@@ -1,10 +1,8 @@
-import io
 import json
-from typing import Any, Optional
+from typing import Optional
 
 import tqdm
 import urllib3
-from PIL import Image
 from zenml import step
 from zenml.logger import get_logger
 
@@ -12,9 +10,11 @@ from src.config.settings import (
     MINIO_DATA_SOURCES_BUCKET_NAME,
     MINIO_DATASETS_BUCKET_NAME,
 )
+from src.materializers.materializer_dataset import DatasetMaterializer
 from src.models.model_bucket_client import BucketClient
 from src.models.model_data_source import DataSource
 from src.models.model_dataset import Dataset
+from src.steps.data.data_validators import is_annotation_file_valid, is_image_file_valid
 from src.steps.data.datalake_initializers import validate_bucket_connection
 
 
@@ -32,42 +32,8 @@ def get_dataset_bucket_name() -> str:
     return MINIO_DATASETS_BUCKET_NAME
 
 
-def is_annotation_file_valid(json_data: Any) -> bool:
-    required_keys = {"label", "bbox", "image_path"}
-    if not all(key in json_data for key in required_keys):
-        return False
-
-    if not json_data["label"] or not isinstance(json_data["label"], list):
-        return False
-
-    if not json_data["bbox"] or not isinstance(json_data["bbox"], list):
-        return False
-
-    for bbox in json_data["bbox"]:
-        if not (
-            isinstance(bbox, list)
-            and len(bbox) == 4
-            and all(isinstance(num, (int, float)) for num in bbox)
-        ):
-            return False
-
-    return True
-
-
-def is_image_file_valid(
-    image_file_bucket_response: urllib3.response.HTTPResponse
-) -> bool:
-    try:
-        image_data = io.BytesIO(image_file_bucket_response.data)
-        with Image.open(image_data) as img:
-            img.verify()
-        return True
-    except Exception:
-        return False
-
-
 def get_json_data_if_valid(
-    annotation_file_bucket_response: urllib3.response.HTTPResponse
+    annotation_file_bucket_response: urllib3.response.HTTPResponse,
 ) -> Optional[dict]:
     logger = get_logger(__name__)
 
@@ -173,7 +139,7 @@ def prepare_dataset(
             image_file_bucket_response.release_conn()
 
 
-@step(name="Create dataset")
+@step(name="Create dataset", output_materializers=DatasetMaterializer)
 def dataset_creator(
     bucket_client: BucketClient, data_source_list: list[DataSource]
 ) -> Dataset:

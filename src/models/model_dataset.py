@@ -1,5 +1,5 @@
 import random
-from typing import Optional
+from typing import Optional, List
 
 import ulid
 
@@ -11,7 +11,7 @@ class Dataset:
         seed: str = "e2e",
         annotations_path: str = "annotations",
         images_path: str = "images",
-        distribution_weights: Optional[list[float]] = None,
+        distribution_weights: Optional[List[float]] = None,
     ):
         if distribution_weights is None:
             distribution_weights = [0.6, 0.2, 0.2]
@@ -21,7 +21,9 @@ class Dataset:
         self.annotations_path = annotations_path
         self.images_path = images_path
         self.distribution_weights = distribution_weights
+        self.seed = seed
         self.random_instance = random.Random(seed)
+        self.split_names = ["train", "test", "validation"]
 
     def format_bucket_image_path(self, image_file_path: str, split_name: str) -> str:
         """
@@ -70,5 +72,9 @@ class Dataset:
         Returns:
             str: The name of the selected folder.
         """
-        folders = ["train", "test", "validation"]
-        return self.random_instance.choices(folders, self.distribution_weights)[0]
+        return self.random_instance.choices(
+            self.split_names, self.distribution_weights
+        )[0]
+
+    def download(self, destination_path: str) -> None:
+        pass
