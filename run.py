@@ -7,6 +7,7 @@ from zenml.enums import ExecutionStatus
 from zenml.integrations import DeepchecksIntegration
 
 from src.pipelines.pipeline_datalake import gitflow_datalake_pipeline
+from src.pipelines.pipeline_experiment import gitflow_experiment_pipeline
 
 
 class Pipeline(str, Enum):
@@ -48,6 +49,9 @@ def main(
 
     if pipeline_name == Pipeline.DATALAKE:
         pipeline_instance = gitflow_datalake_pipeline
+
+    elif pipeline_name == Pipeline.EXPERIMENT:
+        pipeline_instance = gitflow_experiment_pipeline
 
     else:
         raise ValueError(f"Pipeline name `{pipeline_name}` not supported. ")

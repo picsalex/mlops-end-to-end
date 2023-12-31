@@ -12,7 +12,7 @@ from src.config.settings import (
 )
 from src.materializers.materializer_dataset import DatasetMaterializer
 from src.models.model_bucket_client import BucketClient
-from src.models.model_data_source import DataSource
+from src.models.model_data_source import DataSource, DataSourceList
 from src.models.model_dataset import Dataset
 from src.steps.data.data_validators import is_annotation_file_valid, is_image_file_valid
 from src.steps.data.datalake_initializers import validate_bucket_connection
@@ -141,13 +141,13 @@ def prepare_dataset(
 
 @step(name="Create dataset", output_materializers=DatasetMaterializer)
 def dataset_creator(
-    bucket_client: BucketClient, data_source_list: list[DataSource]
+    bucket_client: BucketClient, data_source_list: DataSourceList
 ) -> Dataset:
     dataset = Dataset(bucket_name=get_dataset_bucket_name())
 
     validate_bucket_connection(bucket_client=bucket_client)
 
-    for data_source in data_source_list:
+    for data_source in data_source_list.data_sources:
         prepare_dataset(
             bucket_client=bucket_client,
             source_bucket_name=get_data_sources_bucket_name(),

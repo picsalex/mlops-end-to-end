@@ -8,7 +8,7 @@ from src.steps.data.dataset_preparators import dataset_creator
 
 
 @pipeline
-def gitflow_datalake_pipeline():
+def gitflow_experiment_pipeline():
     """Train and serve a new model if it performs better than the model
     currently served."""
 
