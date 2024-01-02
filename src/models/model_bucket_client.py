@@ -1,6 +1,8 @@
+import os
 from abc import ABC, abstractmethod
 from typing import BinaryIO, Generator, Any
 
+import tqdm
 import urllib3
 from minio import Minio, S3Error
 from minio.commonconfig import ENABLED, CopySource
@@ -16,6 +18,10 @@ class BucketClient(ABC):
 
     @abstractmethod
     def bucket_exists(self, bucket_name: str) -> bool:
+        pass
+
+    @abstractmethod
+    def folder_exists(self, bucket_name: str, folder_name: str) -> bool:
         pass
 
     @abstractmethod
@@ -61,6 +67,12 @@ class BucketClient(ABC):
     ) -> ObjectWriteResult:
         pass
 
+    @abstractmethod
+    def download_folder(
+        self, bucket_name: str, folder_name: str, destination_path: str
+    ) -> None:
+        pass
+
 
 class MinioClient(BucketClient):
     def __init__(
@@ -85,6 +97,21 @@ class MinioClient(BucketClient):
 
     def bucket_exists(self, bucket_name: str) -> bool:
         return self.client.bucket_exists(bucket_name)
+
+    def folder_exists(self, bucket_name: str, folder_name: str) -> bool:
+        try:
+            if not folder_name.endswith("/"):
+                folder_name += "/"
+
+            objects = self.client.list_objects(
+                bucket_name=bucket_name, prefix=folder_name, recursive=False
+            )
+            for _ in objects:
+                return True
+            return False
+
+        except S3Error as e:
+            raise e
 
     def make_bucket(self, bucket_name: str, enable_versioning: bool):
         self.client.make_bucket(bucket_name)
@@ -154,5 +181,26 @@ class MinioClient(BucketClient):
                 object_name=destination_object_name,
                 source=CopySource(source_bucket_name, source_object_name),
             )
+        except S3Error as e:
+            raise e
+
+    def download_folder(
+        self, bucket_name: str, folder_name: str, destination_path: str
+    ) -> None:
+        os.makedirs(destination_path, exist_ok=True)
+
+        try:
+            objects = self.client.list_objects(
+                bucket_name=bucket_name, prefix=folder_name, recursive=True
+            )
+            for obj in tqdm.tqdm(objects):
+                if not obj.is_dir:
+                    object_name = obj.object_name
+                    local_file_path = os.path.join(destination_path, object_name)
+
+                    # Create directories if they don't exist
+                    os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+
+                    self.client.fget_object(bucket_name, object_name, local_file_path)
         except S3Error as e:
             raise e

@@ -3,11 +3,14 @@ from typing import Optional, List
 
 import ulid
 
+from src.models.model_bucket_client import BucketClient
+
 
 class Dataset:
     def __init__(
         self,
         bucket_name,
+        uuid: Optional[str] = None,
         seed: str = "e2e",
         annotations_path: str = "annotations",
         images_path: str = "images",
@@ -16,7 +19,7 @@ class Dataset:
         if distribution_weights is None:
             distribution_weights = [0.6, 0.2, 0.2]
 
-        self.uuid = self.get_data_source_uuid()
+        self.uuid = uuid or self.get_data_source_uuid()
         self.bucket_name = bucket_name
         self.annotations_path = annotations_path
         self.images_path = images_path
@@ -76,5 +79,9 @@ class Dataset:
             self.split_names, self.distribution_weights
         )[0]
 
-    def download(self, destination_path: str) -> None:
-        pass
+    def download(self, bucket_client: BucketClient, destination_root_path: str) -> None:
+        bucket_client.download_folder(
+            bucket_name=self.bucket_name,
+            folder_name=self.uuid,
+            destination_path=destination_root_path,
+        )

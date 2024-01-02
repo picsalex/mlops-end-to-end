@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from zenml import step
 
+from src.models.model_dataset import Dataset
 from src.utils.tracker_helper import get_tracker_name, log_model
 
 
@@ -11,7 +12,7 @@ from src.utils.tracker_helper import get_tracker_name, log_model
     enable_cache=False,
     experiment_tracker=get_tracker_name(),
 )
-def decision_tree_trainer() -> ClassifierMixin:
+def decision_tree_trainer(dataset: Dataset) -> ClassifierMixin:
     """Train a sklearn decision tree classifier.
 
     If the experiment tracker is enabled, the model and the training accuracy

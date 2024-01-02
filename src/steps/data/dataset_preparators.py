@@ -156,3 +156,16 @@ def dataset_creator(
         )
 
     return dataset
+
+
+@step(name="Retrieve an existing dataset", output_materializers=DatasetMaterializer)
+def dataset_retriever(bucket_client: BucketClient, dataset_uuid: str) -> Dataset:
+    if bucket_client.folder_exists(
+        bucket_name=get_dataset_bucket_name(), folder_name=dataset_uuid
+    ):
+        return Dataset(bucket_name=get_dataset_bucket_name(), uuid=dataset_uuid)
+
+    else:
+        raise NotADirectoryError(
+            f"The provided dataset's name {dataset_uuid} does not exist."
+        )
