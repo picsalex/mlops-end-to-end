@@ -162,3 +162,7 @@ cython_debug/
 .DS_Store
 
 .idea/*
+
+# MLFLow
+mlruns/*
+.ruff_cache/*
