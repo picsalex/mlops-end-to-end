@@ -1,22 +1,6 @@
 version: '3'
 
 services:
-  ds-experiment:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.jupyter
-    volumes:
-      - ./src:/home/jovyan/app/src
-    env_file:
-      - src/config/.env
-    environment:
-      - MINIO_HOST=minio
-      - PREFECT_API_URL=http://prefect-api:4200/api
-    ports:
-      - "8888:8888"
-    networks:
-      - mlops_e2e
-
   minio:
     image: minio/minio:latest
     ports:
@@ -31,7 +15,7 @@ services:
       - mlops_e2e
 
 
-  zenml-database:
+  mysql-db:
     image: mysql:8.2
     env_file:
       - src/config/.env
@@ -50,11 +34,26 @@ services:
     env_file:
       - src/config/.env
     depends_on:
-      - zenml-database
+      - mysql-db
+      - minio
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - mlops_e2e
+
+  mlflow-server:
+    build:
+      dockerfile: docker/Dockerfile.mlflow
+    env_file:
+      - src/config/.env
+    depends_on:
+      - mysql-db
+      - minio
+    ports:
+      - "5001:5000"
+    command: "mlflow server --app-name basic-auth --serve-artifacts"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 
 volumes:
