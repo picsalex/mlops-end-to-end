@@ -4,7 +4,7 @@ from src.steps.data.datalake_initializers import (
     minio_client_initializer,
 )
 from src.steps.data.dataset_preparators import dataset_retriever
-from src.steps.training.train_model_step import decision_tree_trainer
+from src.steps.training.model_trainers import model_trainer
 
 
 @pipeline
@@ -21,4 +21,4 @@ def gitflow_experiment_pipeline():
     dataset = dataset_retriever(bucket_client, "01HK6604GDQ9ZBZZSPVYJY8W6S")
     # data_extractor(dataset=dataset, bucket_client=bucket_client)
 
-    decision_tree_trainer(dataset=dataset)
+    model_trainer(dataset=dataset)
