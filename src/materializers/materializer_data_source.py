@@ -9,9 +9,10 @@ from zenml.io import fileio
 from zenml.materializers.base_materializer import BaseMaterializer
 
 from src.models.model_data_source import (
-    LocalDataSource,
-    HuggingFaceDataSource,
+    DataSource,
     DataSourceList,
+    HuggingFaceDataSource,
+    LocalDataSource,
 )
 
 
@@ -47,10 +48,10 @@ class DataSourceMaterializer(BaseMaterializer):
         with fileio.open(data_path, "r") as f:
             serialized_data_sources = json.load(f)
 
-        data_sources = []
+        data_sources: list[DataSource] = []
         for data_source_info in serialized_data_sources:
             if data_source_info["class"] == "HuggingFaceDataSource":
-                data_source = HuggingFaceDataSource(
+                data_source: DataSource = HuggingFaceDataSource(
                     dataset_name=data_source_info["dataset_name"],
                     api_token=data_source_info.get("api_token"),
                 )

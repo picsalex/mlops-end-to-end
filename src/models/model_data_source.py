@@ -80,7 +80,7 @@ class HuggingFaceDataSource(DataSource):
     def __init__(
         self,
         dataset_name: str,
-        api_token: str = None,
+        api_token: str | None = None,
     ):
         super().__init__(
             root_folder_path=dataset_name,
@@ -111,24 +111,28 @@ class HuggingFaceDataSource(DataSource):
 
             if response.status_code == 401:
                 raise PermissionError(
-                    "The HuggingFace's dataset is gated and requires a private API token for access."
+                    "The HuggingFace's dataset is gated and requires a private API"
+                    " token for access."
                 )
             elif response.status_code == 404:
                 raise FileNotFoundError(
-                    "There is an issue with the request, or the dataset is not found on HuggingFace."
+                    "There is an issue with the request, or the dataset is not found on"
+                    " HuggingFace."
                 )
             elif not response.ok:
                 raise ValueError(
-                    f"An error occurred with the request. Status code: {response.status_code}"
+                    "An error occurred with the request. Status code:"
+                    f" {response.status_code}"
                 )
 
             data = response.json()
             if not (data.get("viewer", False) or data.get("preview", False)):
                 raise ValueError(
-                    f"The dataset '{self.root_folder_path}' is not valid or not available on HuggingFace."
+                    f"The dataset '{self.root_folder_path}' is not valid or not"
+                    " available on HuggingFace."
                 )
         except requests.RequestException as e:
-            raise ConnectionError(f"Failed to connect to HuggingFace server: {e}")
+            raise ConnectionError("Failed to connect to HuggingFace server") from e
 
     def get_metadata(self) -> DataSourceMetadata:
         """

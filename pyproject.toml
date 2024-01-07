@@ -24,8 +24,11 @@ ultralytics = "^8.0.232"
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
 python-dotenv = "^1.0.0"
-pre-commit = "^3.5.0"
 ruff = "^0.1.5"
+pylint = "^3.0.3"
+mypy = "^1.8.0"
+black = {extras = ["d"], version = "^23.12.1"}
+pre-commit = "^3.6.0"
 
 [build-system]
 requires = ["poetry-core"]

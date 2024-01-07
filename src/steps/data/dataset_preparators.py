@@ -38,6 +38,7 @@ def get_json_data_if_valid(
     logger = get_logger(__name__)
 
     try:
+        urllib3.response.HTTPResponse()
         json_data = json.loads(annotation_file_bucket_response.data.decode("utf-8"))
 
         if is_annotation_file_valid(json_data=json_data):
@@ -46,12 +47,14 @@ def get_json_data_if_valid(
             return None
     except json.JSONDecodeError:
         logger.error(
-            f"Invalid .json format for object {annotation_file_bucket_response.geturl()}"
+            "Invalid .json format for object"
+            f" {annotation_file_bucket_response.geturl()}"
         )
         return None
     except Exception as e:
         logger.error(
-            f"Error while decoding object {annotation_file_bucket_response.geturl()}: {e}"
+            "Error while decoding object"
+            f" {annotation_file_bucket_response.geturl()}: {e}"
         )
         return None
 

@@ -1,6 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from typing import BinaryIO, Generator, Any
+from typing import Any, BinaryIO, Generator
 
 import tqdm
 import urllib3
@@ -50,7 +50,7 @@ class BucketClient(ABC):
         pass
 
     @abstractmethod
-    def list_objects(self, bucket_name: str, prefix: str = None):
+    def list_objects(self, bucket_name: str, prefix: str | None = None):
         pass
 
     @abstractmethod
@@ -93,7 +93,7 @@ class MinioClient(BucketClient):
         except S3Error as e:
             raise e
         except Exception as e:
-            raise ConnectionError(f"Failed to connect to MinIO: {e}")
+            raise ConnectionError("Failed to connect to MinIO") from e
 
     def bucket_exists(self, bucket_name: str) -> bool:
         return self.client.bucket_exists(bucket_name)
@@ -151,7 +151,7 @@ class MinioClient(BucketClient):
         )
 
     def list_objects(
-        self, bucket_name: str, prefix: str = None
+        self, bucket_name: str, prefix: str | None = None
     ) -> Generator[Object, Any, None]:
         try:
             return self.client.list_objects(bucket_name=bucket_name, prefix=prefix)
