@@ -3,32 +3,25 @@ repos:
   rev: v4.5.0
   hooks:
   - id: check-ast
-  - id: check-case-conflict
-  - id: check-executables-have-shebangs
-  - id: check-json
   - id: check-merge-conflict
   - id: check-shebang-scripts-are-executable
-  - id: check-symlinks
   - id: check-toml
-  - id: check-xml
-    exclude: '.*\.svg$'
   - id: check-yaml
   - id: end-of-file-fixer
-  - id: fix-byte-order-marker
-  - id: mixed-line-ending
-    args: ["--fix=lf"]
-  - id: pretty-format-json
-    exclude: 'package(-lock).json|.*\.ipynb'
-    args: ["--autofix"]
   - id: trailing-whitespace
 
-
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.1.5
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: v0.1.11
   hooks:
     - id: ruff
-      args: [ --fix ]
+  args:
+    - --fix
     - id: ruff-format
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.4.1
+  hooks:
+  - id: mypy
 
 - repo: https://github.com/kynan/nbstripout
   rev: 0.6.1

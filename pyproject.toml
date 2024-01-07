@@ -17,7 +17,6 @@ pillow = "^10.1.0"
 numpy = "^1.26.1"
 s3fs = "^2023.10.0"
 zenml = "^0.53.1"
-deepchecks = "^0.17.5"
 mlflow = "^2.9.2"
 ultralytics = "^8.0.232"
 
@@ -31,3 +30,20 @@ ruff = "^0.1.5"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+]
+
+[tool.ruff.isort]
+known-local-folder = ["src"]
